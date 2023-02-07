@@ -1,35 +1,57 @@
-
 <div class="main-weather">
     <h1 style="margin-top: 2rem">Weather App Mobile</h1>
-    <mat-form-field class="example-full-width" appearance="fill">
-        <mat-label>Type your city</mat-label>
-        <input
+
+    <img src="/assets/pictures/{{imgAlea}}.png" class="container-img" alt="">
+
+    <div class="input-row">
+        <button mat-button [matMenuTriggerFor]="menu">Récentes Recherches</button>
+        <mat-menu #menu="matMenu">
+            <button mat-menu-item *ngFor="let item of lastSearch">{{ item.city }}</button>
+        </mat-menu>
+        <mat-form-field class="example-full-width" appearance="fill">
+            <mat-label>Type your city</mat-label>
+            <input
             type="text"
             matInput
             [formControl]="controlCity"
             [matAutocomplete]="auto"
-        />
-        <mat-autocomplete #auto="matAutocomplete">
-            <mat-option
-                *ngFor="let option of cityOptions"
-                (onSelectionChange)="getWeather(option)"
-                [value]="option"
-            >
-                {{ option }}
-            </mat-option>
-        </mat-autocomplete>
-    </mat-form-field>
+            />
+            <mat-autocomplete #auto="matAutocomplete">
+                <mat-option
+                    *ngFor="let option of cityOptions"
+                    (onSelectionChange)="onChangeValueAutoComplete(option)"
+                    [value]="option"
+                >
+                    {{ option }}
+                </mat-option>
+            </mat-autocomplete>
+        </mat-form-field>
+        <img src="/assets/icon/2819186-200.png" class="icon-location" (click)="getCurrentLocation()" />
+    </div>
 
     <div *ngIf="cityWeather?.current_weather">
+        <div *ngIf="cityWeather?.address">
+            Vous êtes localisé en {{ cityWeather.region }}, {{ cityWeather.area }} au {{ cityWeather.address }}
+        </div>
         <div>
             il fait {{ cityWeather.current_weather.temperature }} °C
         </div>
         <div>
-            {{ cityWeather.current_weather.time | date: 'le dd/MM/yyyy à HH:mm' }}
+            {{ cityWeather.current_weather.time | date : "le dd/MM/yyyy à HH:mm" :'GMT+2' }}
         </div>
-
         <div>
             Le vent souffle à {{ cityWeather.current_weather.winddirection }}km/h
         </div>
     </div>
+
+    <mat-tab-group *ngIf="tabWeather">
+        <mat-tab *ngFor="let weather of tabWeather " [label]="tabDate[tabWeather.indexOf(weather)]"> 
+            <table>
+                <tr *ngFor="let item of weather">
+                    <th> {{item.time | date:'HH:mm'}}</th>
+                    <td>{{item.temperature}} °C</td>
+                </tr>
+            </table>
+        </mat-tab>
+    </mat-tab-group>
 </div>

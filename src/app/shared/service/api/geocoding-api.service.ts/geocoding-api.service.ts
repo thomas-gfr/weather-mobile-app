@@ -10,15 +10,11 @@ export class GeocodingApiService {
     constructor(private request: HttpClient) {}
 
     public getListCity(params?: string) {
-        // environment.httpOptions.params = new HttpParams();
-        // if (params) {
-        //     for (const [key, value] of Object.entries(params)) {
-        //         if (value !== null && value !== undefined) environment.httpOptions.params = environment.httpOptions.params.append(key, value);
-        //     }
-        // }
-
-        // return this.request.get('https://geocoding-api.open-meteo.com/v1/search', environment.httpOptions).pipe(retry({ count: 1, delay: 1000 }));
-
+        environment.httpOptions.params = new HttpParams();
+        Object.assign(environment.httpOptions, {
+            headers: null
+        })
+        
         return new Promise((resolve, reject) => { 
             fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${params}`)
             .then((response) => {
