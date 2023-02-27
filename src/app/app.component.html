@@ -4,9 +4,9 @@
     <img src="/assets/pictures/{{imgAlea}}.png" class="container-img" alt="">
 
     <div class="input-row">
-        <button mat-button [matMenuTriggerFor]="menu">Récentes Recherches</button>
+        <button mat-button [matMenuTriggerFor]="menu">Recherches sauvegardés </button>
         <mat-menu #menu="matMenu">
-            <button mat-menu-item *ngFor="let item of lastSearch">{{ item.city }}</button>
+            <button mat-menu-item *ngFor="let item of searchSave">{{ item }}</button>
         </mat-menu>
         <mat-form-field class="example-full-width" appearance="fill">
             <mat-label>Type your city</mat-label>
@@ -30,6 +30,7 @@
     </div>
 
     <div *ngIf="cityWeather?.current_weather">
+        <button (click)="saveCity(cityWeather)" >Sauvegardé</button>
         <div *ngIf="cityWeather?.address">
             Vous êtes localisé en {{ cityWeather.region }}, {{ cityWeather.area }} au {{ cityWeather.address }}
         </div>

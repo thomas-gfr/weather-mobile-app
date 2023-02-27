@@ -12,7 +12,7 @@ import { ITabWeather } from './shared/interfaces/tab-weather.model';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit {
     public title = 'mobile-app';
@@ -20,13 +20,13 @@ export class AppComponent implements OnInit {
     public cityOptions: string[] = [];
     public cities: [] = [];
     public imgAlea: number = Math.floor(Math.random() * (4 - 1)) + 1;
-    public cityWeather: any
+    public cityWeather: any;
 
-    public tabWeather: Array<ITabWeather[]> = []
-    public tabDate = []
-    public tabTime = []
-    public tabTemp = []
-    public lastSearch: any[] = []
+    public tabWeather: Array<ITabWeather[]> = [];
+    public tabDate = [];
+    public tabTime = [];
+    public tabTemp = [];
+    public searchSave: any[] = [];
 
     constructor(
         private openMeteoApiService: OpenMeteoApiService,
@@ -36,106 +36,142 @@ export class AppComponent implements OnInit {
 
     public ngOnInit(): void {
         const printCurrentPosition = async () => {
-            const coordinates = await Geolocation.getCurrentPosition();
-            this.controlCity.setValue(`${coordinates.coords.latitude}, ${coordinates.coords.longitude}`)
+        const coordinates = await Geolocation.getCurrentPosition();
+        this.controlCity.setValue(
+            `${coordinates.coords.latitude}, ${coordinates.coords.longitude}`
+            );
         };
 
-        this.getCurrentLocation()
+        this.getCurrentLocation();
 
-        this.controlCity.valueChanges.pipe(
+        this.controlCity.valueChanges
+        .pipe(
             tap((value) => {
-                if (value.length > 1) {
-                    this.geocodingApiService.getListCity(value).then((response: any) => {
-                        if (response.results){
-                            this.cities = response.results
-                            this.cityOptions = response.results.map((item: any) => {
-                                item.displayedLabel = `${item.name} (${item.country})`
-                                return item.displayedLabel
-                            });
-                        }
-                    }).catch((error) => {
-                        console.error(error);
-                    })
-                }
-            }),
-        ).subscribe()
+            if (value.length > 1) {
+                this.geocodingApiService
+                .getListCity(value)
+                .then((response: any) => {
+                    if (response.results) {
+                    this.cities = response.results;
+                    this.cityOptions = response.results.map((item: any) => {
+                        item.displayedLabel = `${item.name} (${item.country})`;
+                        return item.displayedLabel;
+                    });
+                    }
+                })
+                .catch((error) => {
+                    console.error(error);
+                });
+            }
+            })
+        )
+        .subscribe();
+
+        this.searchSave.push(JSON.parse(localStorage.getItem('city')))
+        console.log(this.searchSave)
     }
 
     public getWeather(value): void {
-        this.openMeteoApiService.getWeatherByLongitudeLatitude({
+        this.openMeteoApiService
+        .getWeatherByLongitudeLatitude({
             longitude: value.longitude,
             latitude: value.latitude,
             hourly: 'temperature_2m',
-            current_weather: true
+            current_weather: true,
         })
         .pipe(
             tap((response: any) => {
-                this.cityWeather = response
-                this.tabTemp = JSON.parse(JSON.stringify(response)).hourly.temperature_2m
-                this.tabTime = JSON.parse(JSON.stringify(response)).hourly.time
+            this.cityWeather = response;
+            this.tabTemp = JSON.parse(
+                JSON.stringify(response)
+            ).hourly.temperature_2m;
+            this.tabTime = JSON.parse(JSON.stringify(response)).hourly.time;
 
-                this.constructTabWeather()
+            this.constructTabWeather();
             })
-        ).subscribe()
+        )
+        .subscribe();
     }
 
     public constructTabWeather(): void {
-        if (this.tabTime.length > 0){
-            let referntDay: string = this.tabTime[0].replace(/T.*/, '')
-            let tabDayTemp: ITabWeather[] = []
+        if (this.tabTime.length > 0) {
+        let referntDay: string = this.tabTime[0].replace(/T.*/, '');
+        let tabDayTemp: ITabWeather[] = [];
 
-            for (let index = 0; index < this.tabTemp.length; index++) {
-                let object = {
-                    temperature: this.tabTemp[index],
-                    time: this.tabTime[index]
-                }
-                if (this.tabTime[index].replace(/T.*/, '') !== referntDay) {
-                    this.tabWeather.push(tabDayTemp)
-                    this.tabDate.push(referntDay)
-                    tabDayTemp = []
-                    referntDay = this.tabTime[index].replace(/T.*/, '')
-                }
-                tabDayTemp.push(object)
+        for (let index = 0; index < this.tabTemp.length; index++) {
+            let object = {
+            temperature: this.tabTemp[index],
+            time: this.tabTime[index],
+            };
+            if (this.tabTime[index].replace(/T.*/, '') !== referntDay) {
+            this.tabWeather.push(tabDayTemp);
+            this.tabDate.push(referntDay);
+            tabDayTemp = [];
+            referntDay = this.tabTime[index].replace(/T.*/, '');
             }
+            tabDayTemp.push(object);
+        }
         }
     }
 
-    public onChangeValueAutoComplete(value) : void {
-        let city = null
-        city = this.cities.find((item: any) => value.includes(item.name))
-        this.getWeather(city)
+    public onChangeValueAutoComplete(value): void {
+        let city = null;
+        city = this.cities.find((item: any) => value.includes(item.name));
+        this.getWeather(city);
     }
 
     public getCurrentLocation(): void {
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((position: Position) => {
-                if (position) {
-                    const postion = {
-                        longitude: position.coords.longitude,
-                        latitude: position.coords.latitude,
-                    }
-                    this.getWeather(postion)
-                    this.getCityNameByLongitudeLatitude(postion)
-                }
+        navigator.geolocation.getCurrentPosition(
+            (position: Position) => {
+            if (position) {
+                const postion = {
+                longitude: position.coords.longitude,
+                latitude: position.coords.latitude,
+                };
+                this.getWeather(postion);
+                this.getCityNameByLongitudeLatitude(postion);
+            }
             },
-                (error) => console.error(error));
+            (error) => console.error(error)
+        );
         } else {
-            alert("Geolocation is not supported by this browser.");
+        alert('Geolocation is not supported by this browser.');
         }
     }
 
     public getCityNameByLongitudeLatitude(value): void {
-        this.rapidApi.getCityNameByLongitudeLatitude({location: value.latitude + ',' + value.longitude}).pipe(
+        this.rapidApi
+        .getCityNameByLongitudeLatitude({
+            location: value.latitude + ',' + value.longitude,
+        })
+        .pipe(
             tap((response: any) => {
-                this.controlCity.setValue(response.results[0].locality)
-                
-                this.cityWeather = {
-                    ...this.cityWeather,
-                    address: response.results[0].address,
-                    area: response.results[0].area,
-                    region: response.results[0].region,
-                }
+            this.controlCity.setValue(response.results[0].locality);
+
+            this.cityWeather = {
+                ...this.cityWeather,
+                address: response.results[0].address,
+                area: response.results[0].area,
+                region: response.results[0].region,
+                city: response.results[0].locality,
+            };
             })
-        ).subscribe()
+        )
+        .subscribe();
+    }
+
+    public saveCity(city): void {
+        if (city.city) {
+            this.searchSave.push(city.city)
+            
+        } else {
+            this.searchSave.push(this.controlCity.value)
+        }
+
+        this.searchSave.forEach((item) => {
+            localStorage.setItem('city', JSON.stringify(item));
+        })
+        
     }
 }
